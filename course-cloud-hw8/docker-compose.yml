@@ -1,0 +1,290 @@
+#version: '3.8'
+
+networks:
+  course-network:
+    driver: bridge
+
+volumes:
+  nacos-data:
+  nacos-logs:
+
+services:
+  # ========== Nacos 服务注册中心（连接主机MySQL）==========
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: nacos
+    environment:
+      - MODE=standalone
+      - JVM_XMS=256m
+      - JVM_XMX=256m
+      - JVM_XMN=128m
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=172.17.0.1           # 主机MySQL（删除了user-db那行）
+      - MYSQL_SERVICE_PORT=3306
+      - MYSQL_SERVICE_DB_NAME=nacos_config
+      - MYSQL_SERVICE_USER=nacos
+      - MYSQL_SERVICE_PASSWORD=nacos123
+      - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    volumes:
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
+    networks:
+      - course-network
+    restart: unless-stopped
+
+  # ========== 用户服务 - 实例1 ==========
+  user-service-1:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    image: course-cloud-user-service:1.2.0
+    container_name: user-service-1
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.17.0.1:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user_user
+      SPRING_DATASOURCE_PASSWORD: user_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+      SERVER_PORT: 8081
+      SPRING_APPLICATION_NAME: user-service
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_GROUP: COURSEHUB_GROUP
+      SPRING_CLOUD_NACOS_DISCOVERY_EPHEMERAL: true
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL: 5000
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT: 15000
+      #SPRING_CLOUD_NACOS_DISCOVERY_USERNAME: nacos
+      #SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD: nacos
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - nacos
+    networks:
+      - course-network
+    restart: unless-stopped
+
+  # ========== 用户服务 - 实例2 ==========
+  user-service-2:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    image: course-cloud-user-service:1.2.0
+    container_name: user-service-2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.17.0.1:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user_user
+      SPRING_DATASOURCE_PASSWORD: user_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+      SERVER_PORT: 8081
+      SPRING_APPLICATION_NAME: user-service
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_GROUP: COURSEHUB_GROUP
+      SPRING_CLOUD_NACOS_DISCOVERY_EPHEMERAL: true
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL: 5000
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT: 15000
+      #SPRING_CLOUD_NACOS_DISCOVERY_USERNAME: nacos
+      #SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD: nacos
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - nacos
+    networks:
+      - course-network
+    restart: unless-stopped
+
+  # ========== 用户服务 - 实例3 ==========
+  user-service-3:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    image: course-cloud-user-service:1.2.0
+    container_name: user-service-3
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.17.0.1:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: user_user
+      SPRING_DATASOURCE_PASSWORD: user_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+      SERVER_PORT: 8081
+      SPRING_APPLICATION_NAME: user-service
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_GROUP: COURSEHUB_GROUP
+      SPRING_CLOUD_NACOS_DISCOVERY_EPHEMERAL: true
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL: 5000
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT: 15000
+      #SPRING_CLOUD_NACOS_DISCOVERY_USERNAME: nacos
+      #SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD: nacos
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - nacos
+    networks:
+      - course-network
+    restart: unless-stopped
+
+  # ========== 课程目录服务 - 实例1 ==========
+  catalog-service-1:
+    build:
+      context: ./catalog-service
+      dockerfile: Dockerfile
+    image: course-cloud-catalog-service:1.2.0
+    container_name: catalog-service-1
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.17.0.1:3306/catalog_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: catalog_user
+      SPRING_DATASOURCE_PASSWORD: catalog_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+      SERVER_PORT: 8082
+      SPRING_APPLICATION_NAME: catalog-service
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_GROUP: COURSEHUB_GROUP
+      SPRING_CLOUD_NACOS_DISCOVERY_EPHEMERAL: true
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL: 5000
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT: 15000
+      #SPRING_CLOUD_NACOS_DISCOVERY_USERNAME: nacos
+      #SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD: nacos
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - nacos
+    networks:
+      - course-network
+    restart: unless-stopped
+
+  # ========== 课程目录服务 - 实例2 ==========
+  catalog-service-2:
+    build:
+      context: ./catalog-service
+      dockerfile: Dockerfile
+    image: course-cloud-catalog-service:1.2.0
+    container_name: catalog-service-2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.17.0.1:3306/catalog_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: catalog_user
+      SPRING_DATASOURCE_PASSWORD: catalog_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+      SERVER_PORT: 8082
+      SPRING_APPLICATION_NAME: catalog-service
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_GROUP: COURSEHUB_GROUP
+      SPRING_CLOUD_NACOS_DISCOVERY_EPHEMERAL: true
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL: 5000
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT: 15000
+      #SPRING_CLOUD_NACOS_DISCOVERY_USERNAME: nacos
+      #SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD: nacos
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - nacos
+    networks:
+      - course-network
+    restart: unless-stopped
+
+  # ========== 课程目录服务 - 实例3 ==========
+  catalog-service-3:
+    build:
+      context: ./catalog-service
+      dockerfile: Dockerfile
+    image: course-cloud-catalog-service:1.2.0
+    container_name: catalog-service-3
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.17.0.1:3306/catalog_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: catalog_user
+      SPRING_DATASOURCE_PASSWORD: catalog_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+      SERVER_PORT: 8082
+      SPRING_APPLICATION_NAME: catalog-service
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_GROUP: COURSEHUB_GROUP
+      SPRING_CLOUD_NACOS_DISCOVERY_EPHEMERAL: true
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL: 5000
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT: 15000
+      #SPRING_CLOUD_NACOS_DISCOVERY_USERNAME: nacos
+      #SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD: nacos
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      LOGGING_LEVEL_ROOT: INFO
+    depends_on:
+      - nacos
+    networks:
+      - course-network
+    restart: unless-stopped
+
+  # ========== 选课服务 - 单实例 ==========
+  enrollment-service:
+    build:
+      context: ./enrollment-service
+      dockerfile: Dockerfile
+    image: course-cloud-enrollment-service:latest
+    container_name: enrollment-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.17.0.1:3306/enrollment_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: enrollment_user
+      SPRING_DATASOURCE_PASSWORD: enrollment_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: true
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: true
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect
+      SERVER_PORT: 8083
+      SPRING_APPLICATION_NAME: enrollment-service
+      SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR: nacos:8848
+      SPRING_CLOUD_NACOS_DISCOVERY_NAMESPACE: dev
+      SPRING_CLOUD_NACOS_DISCOVERY_GROUP: COURSEHUB_GROUP
+      SPRING_CLOUD_NACOS_DISCOVERY_EPHEMERAL: true
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_INTERVAL: 5000
+      SPRING_CLOUD_NACOS_DISCOVERY_HEART_BEAT_TIMEOUT: 15000
+      #SPRING_CLOUD_NACOS_DISCOVERY_USERNAME: nacos
+      #SPRING_CLOUD_NACOS_DISCOVERY_PASSWORD: nacos
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      LOGGING_LEVEL_ROOT: INFO
+    ports:
+      - "8083:8083"
+    depends_on:
+      - nacos
+    networks:
+      - course-network
+    restart: unless-stopped

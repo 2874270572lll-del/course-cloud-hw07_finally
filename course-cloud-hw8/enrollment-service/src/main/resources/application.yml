@@ -1,0 +1,88 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: enrollment-service  # 微服务名称（Nacos 注册的服务名）
+
+  datasource:
+    url: jdbc:mysql://192.168.173.1:3306/enrollment_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf-8
+    username: root
+    password: lilili2004
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 自动更新表结构
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true  # 格式化 SQL
+        dialect: org.hibernate.dialect.MySQL8Dialect  # 手动指定 MySQL 8 方言
+        temp:
+          use_jdbc_metadata_defaults: false
+    open-in-view: false
+
+  cloud:
+    nacos:
+      discovery:
+        enabled: true
+        server-addr: nacos:8848
+        namespace: dev  # 命名空间（需在 Nacos 控制台创建）
+        register-enabled: true
+        group: COURSEHUB_GROUP  # 分组
+        ephemeral: true  # 临时实例（服务宕机后 Nacos 自动注销）
+        heart-beat-interval: 1000  # 心跳间隔 5s
+        heart-beat-timeout: 3000  # 心跳超时 15s
+    openfeign:
+      circuitbreaker:
+        enabled: true
+        alphanumeric-ids:
+          enabled: true
+# ⭐ OpenFeign 配置
+feign:
+  circuitbreaker:
+    enabled: true  # 启用熔断器
+  client:
+    config:
+      default:
+        connectTimeout: 3000  # 连接超时 3秒
+        readTimeout: 5000     # 读取超时 5秒
+        loggerLevel: FULL    # 日志级别：NONE, BASIC, HEADERS, FULL
+
+# ⭐ Resilience4j 熔断器配置
+resilience4j:
+  circuitbreaker:
+    instances:
+      user-service:
+        failureRateThreshold: 50          # 失败率阈值 50%
+        slidingWindowSize: 10             # 滑动窗口大小 10次
+        slidingWindowType: COUNT_BASED    # 基于调用次数的滑动窗口
+        minimumNumberOfCalls: 5           # 最小调用次数
+        waitDurationInOpenState: 10000    # 熔断器打开后等待时间 10秒
+        permittedNumberOfCallsInHalfOpenState: 3  # 半开状态允许的调用数
+        automaticTransitionFromOpenToHalfOpenEnabled: true  # 自动从打开到半开
+      catalog-service:
+        failureRateThreshold: 50
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+logging:
+  level:
+    root: INFO  # ⭐ 减少日志输出
+    com.zjgsu.coursecloud.enrollment: INFO
+    org.springframework.cloud.openfeign: DEBUG
+    feign: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info  # 暴露健康检查和信息端点
+  endpoint:
+    health:
+      show-details: always  # 显示健康详情，便于 Nacos 识别服务状态
