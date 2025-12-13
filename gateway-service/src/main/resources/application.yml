@@ -1,0 +1,95 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: gateway-service
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+        namespace: dev
+        group: COURSEHUB_GROUP
+        ephemeral: true
+        register-enabled: true
+
+    # ⭐ 配置负载均衡（让 lb:// 协议工作）
+    loadbalancer:
+      nacos:
+        enabled: true
+
+    gateway:
+      # ⭐ 启用服务发现
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      routes:
+        # ⭐ 认证路由（最高优先级）
+        - id: auth-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
+          order: 1
+
+        # User Service 路由
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**,/api/students/**,/api/teachers/**
+          order: 2
+
+        # Catalog Service 路由
+        - id: catalog-service
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/courses/**
+          order: 3
+
+        # Enrollment Service 路由
+        - id: enrollment-service
+          uri: lb://enrollment-service
+          predicates:
+            - Path=/api/enrollments/**
+          order: 4
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "*"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: false
+            max-age: 3600
+
+jwt:
+  secret: your-very-long-secret-key-at-least-64-characters-long-for-hs512-algorithm
+  expiration: 86400000
+
+# ⭐ 管理端点（必须启用）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      enabled: true
+
+# 日志配置
+logging:
+  level:
+    com.lll.zjgsu.coursecloud.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+    com.alibaba.cloud.nacos: INFO
+    reactor.netty: INFO

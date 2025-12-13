@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+
+  # ⭐ 修改数据库连接配置
+  datasource:
+    url: jdbc:mysql://user-db:3306/user_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf-8
+    username: user_user
+    password: user_pass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 自动更新表结构
+    show-sql: true  # ⭐ 改为 true，方便调试
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: nacos:8848
+        namespace: dev
+        group: COURSEHUB_GROUP
+
+jwt:
+  secret: your-very-long-secret-key-at-least-64-characters-long-for-hs512-algorithm
+  expiration: 86400000
+
+logging:
+  level:
+    root: INFO
+    com.lll.zjgsu.coursecloud.user: DEBUG  # ⭐ 添加应用日志
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc: DEBUG
+    com.alibaba.cloud.nacos: INFO
